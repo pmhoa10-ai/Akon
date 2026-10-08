@@ -51,22 +51,41 @@ jobs:
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
-      - name: Build APK
+      - name: Fix Java and Kotlin JVM target
         shell: bash
         run: |
           set -e
 
-          cat > "$RUNNER_TEMP/akon-init.gradle" <<'EOF'
-          allprojects {
-              tasks.withType(JavaCompile).configureEach {
-                  sourceCompatibility = '17'
-                  targetCompatibility = '17'
+          APP_GRADLE="$PROJECT_DIR/app/build.gradle.kts"
+
+          if [ ! -f "$APP_GRADLE" ]; then
+            echo "Không tìm thấy app/build.gradle.kts"
+            exit 1
+          fi
+
+          cat >> "$APP_GRADLE" <<'EOF'
+
+          // CI JVM compatibility fix
+          android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
               }
+          }
+
+          kotlin {
+              jvmToolchain(17)
           }
           EOF
 
+          echo "Đã ép Java và Kotlin cùng sử dụng JVM 17."
+
+      - name: Build APK
+        shell: bash
+        run: |
+          set -e
           cd "$PROJECT_DIR"
-          gradle :app:assembleDebug --no-daemon --init-script "$RUNNER_TEMP/akon-init.gradle"
+          gradle :app:assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
