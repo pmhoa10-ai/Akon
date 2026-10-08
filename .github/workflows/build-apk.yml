@@ -55,8 +55,18 @@ jobs:
         shell: bash
         run: |
           set -e
+
+          cat > "$RUNNER_TEMP/akon-init.gradle" <<'EOF'
+          allprojects {
+              tasks.withType(JavaCompile).configureEach {
+                  sourceCompatibility = '17'
+                  targetCompatibility = '17'
+              }
+          }
+          EOF
+
           cd "$PROJECT_DIR"
-          gradle :app:assembleDebug --no-daemon
+          gradle :app:assembleDebug --no-daemon --init-script "$RUNNER_TEMP/akon-init.gradle"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
