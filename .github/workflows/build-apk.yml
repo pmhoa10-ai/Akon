@@ -35,27 +35,31 @@ jobs:
 
           unzip -q Akon_Android_Project.zip -d build_project
 
-          PROJECT_DIR="build_project/Akon_Android_Project"
+          SETTINGS_FILE=$(find build_project -name "settings.gradle.kts" -type f -print -quit)
 
-          if [ ! -f "$PROJECT_DIR/settings.gradle.kts" ]; then
-            echo "Không tìm thấy settings.gradle.kts"
+          if [ -z "$SETTINGS_FILE" ]; then
+            echo "Không tìm thấy settings.gradle.kts trong ZIP"
+            echo "Nội dung ZIP:"
+            find build_project -maxdepth 4 -type f | head -100
             exit 1
           fi
 
-          echo "Android project found:"
-          ls -la "$PROJECT_DIR"
+          PROJECT_DIR=$(dirname "$SETTINGS_FILE")
+
+          echo "Android project found at:"
+          echo "$PROJECT_DIR"
+
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
       - name: Build APK
         shell: bash
         run: |
           set -e
-
-          cd build_project/Akon_Android_Project
-
+          cd "$PROJECT_DIR"
           gradle :app:assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Akon-debug-apk
-          path: build_project/Akon_Android_Project/app/build/outputs/apk/debug/app-debug.apk
+          path: "**/app/build/outputs/apk/debug/app-debug.apk"
