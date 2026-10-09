@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101114">
+<title>AKON14 — 57 ngày</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101114;color:#f5f5f5;font:16px system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:22px 15px 45px}
+.brand{color:#d7ff64;font-size:12px;font-weight:900;letter-spacing:3px}
+h1{font-size:clamp(38px,10vw,62px);line-height:1;margin:18px 0;letter-spacing:-2px}
+p,.muted{color:#a4a4ad}
+.panel{background:#191b20;border:1px solid #343740;border-radius:18px;padding:16px;margin:16px 0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.big{font-size:28px;font-weight:900}
+.track{height:8px;background:#30323a;border-radius:9px;margin:12px 0;overflow:hidden}
+.fill{height:100%;width:0;background:#d7ff64}
+input[type=date]{background:#22252b;color:white;border:1px solid #444;padding:10px;border-radius:9px;max-width:100%}
+h2{font-size:23px}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.day{min-height:57px;background:#191b20;border:1px solid #343740;color:white;border-radius:10px;padding:5px 1px}
+.day b{display:block;font-size:16px}
+.day small{display:block;font-size:9px;color:#aaa;margin-top:3px}
+.day.active{border:2px solid #d7ff64}
+.day.done{background:#28351e}
+.day.rest small{color:#f1d68c}
+.tag{font-size:11px;letter-spacing:1px;background:#30323a;padding:6px 9px;border-radius:7px}
+.video{display:flex;align-items:center;gap:12px;padding:13px;margin-top:9px;border:1px solid #383a42;background:#24262d;color:white;text-decoration:none;border-radius:12px}
+.play{background:#d7ff64;color:#111;padding:12px;border-radius:9px;font-weight:900}
+.video small{display:block;color:#aaa;margin-top:3px}
+.check{display:flex;gap:10px;align-items:center;background:#24262d;border-radius:10px;padding:13px;margin:15px 0}
+.check input{width:22px;height:22px;accent-color:#d7ff64}
+button{font:inherit;cursor:pointer}
+.secondary{background:#24262d;color:white;border:1px solid #444;padding:10px 12px;border-radius:10px}
+.note{font-size:12px;color:#aaa;line-height:1.5}
+footer{font-size:12px;color:#999;text-align:center;margin-top:30px}
+@media(min-width:500px){.day{min-height:66px}.days{gap:8px}}
+</style>
+</head>
+<body>
+<main>
+<div class="brand">AKON14 / TRAINING LOG</div>
+<h1>57 ngày.<br>Không bỏ cuộc.</h1>
+<p>Lịch tập của bạn. Chọn ngày, mở video và đánh dấu khi hoàn thành.</p>
+
+<section class="panel">
+<div class="row">
+<div><div class="muted">TIẾN ĐỘ CỦA BẠN</div>
+<div class="big"><span id="count">0</span><span class="muted"> / 57 ngày</span></div></div>
+<div class="big" id="percent">0%</div>
+</div>
+<div class="track"><div class="fill" id="fill"></div></div>
+<div id="progressText" class="muted">Bắt đầu từ ngày đầu tiên.</div>
+<div class="row" style="margin-top:15px">
+<label for="start">Ngày bắt đầu:</label>
+<input id="start" type="date">
+</div>
+<p class="note">Tiến độ được lưu trên trình duyệt của thiết bị này.</p>
+</section>
+
+<div class="row"><h2>Lịch 57 ngày</h2><span class="muted">Chạm vào ngày</span></div>
+<div class="days" id="days"></div>
+
+<section class="panel" id="detail"></section>
+<div class="row">
+<button class="secondary" id="today">Ngày hiện tại</button>
+<button class="secondary" id="reset">Xóa tiến độ</button>
+</div>
+<footer>AKON14 · Kiên trì và tập luyện an toàn. Lịch này không bảo đảm tăng chiều cao.</footer>
+</main>
+
+<script>
+const videos=[
+"sqYKHBfR5Ow","k9IGj0JcjDM","zauoBpH6Dhc","NRnubyQLiHc",
+"tt92VvJZKiI","QO7_zCLpHm8","awL7z0vQbL4","03oUPPq2YYo",
+"aljF5P1qdOM","JOE1U4FDB2U","zaNIjpjPrpw","02CHGiC8Q94",
+"3w5Kk7tOqDc","0rK8Of0KaXM","SujoHm_-_qU","aWh6lxszX84",
+"gph3j9J8iv8","Pp9c2f67hV4","PIp8Dw1Qs9k","gUEW-id6pNw",
+"xqk3-dwhVcU","ysQzfyRR9w0","XPOMZgAeW8w","PxPoE6ZhzM8",
+"0tV-pLUQ0qo","-letzUzY-fk","bFwK-4Lm5Dg","As4nSsCOwQo",
+"M8CXcugu5Yw","1IIDXzw8wI8"
+];
+
+const rest=new Set([4,8,12,16,20,24,29,34,39,44,49,53]);
+const single={
+1:1,2:2,3:3,5:4,6:5,7:6,9:7,10:8,11:9,
+13:10,14:11,15:12,17:13,18:14,19:15,
+21:16,22:17,23:18,25:19,26:20,27:21,28:22,
+30:23,31:24,32:25,33:26,35:27,36:28,37:29,38:30
+};
+const pairs={
+40:[1,2],41:[3,4],42:[5,6],43:[7,8],
+45:[9,10],46:[11,12],47:[13,14],48:[15,16],
+50:[17,18],51:[19,20],52:[21,22],
+54:[23,24],55:[25,26],56:[27,28],57:[29,30]
+};
+function getSessions(d){
+ if(rest.has(d))return [];
+ if(d<=20)return single[d]?[single[d]]:[];
+ if(d<=39)return single[d]?[single[d]]:[];
+ return pairs[d]||[];
+}
+const KEY="akon14-progress-v1";
+const today=new Date();
+const isoToday=today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0")+"-"+String(today.getDate()).padStart(2,"0");
+let state={start:isoToday,done:[],selected:1};
+try{state={...state,...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch(e){}
+if(!Array.isArray(state.done))state.done=[];
+const $=id=>document.getElementById(id);
+$("start").value=state.start;
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function dateOf(d){
+ const x=new Date(state.start+"T12:00:00");
+ x.setDate(x.getDate()+d-1);
+ return x.toLocaleDateString("vi-VN");
+}
+function videoLink(id,title,sub){
+ return '<a class="video" href="https://www.youtube.com/watch?v='+id+
+ '" target="_blank" rel="noopener"><span class="play">▶</span><span><b>'+
+ title+'</b><small>'+sub+'</small></span></a>';
+}
+function render(){
+ $("days").innerHTML="";
+ for(let d=1;d<=57;d++){
+  const ss=getSessions(d),done=state.done.includes(d);
+  const b=document.createElement("button");
+  b.className="day"+(d===state.selected?" active":"")+
+   (done?" done":"")+(ss.length===0?" rest":"");
+  b.innerHTML="<b>"+(done?"✓":d)+"</b><small>"+
+   (ss.length?ss.map(n=>"B"+n).join("+"):"NGHỈ")+"</small>";
+  b.onclick=()=>{state.selected=d;save();render()};
+  $("days").appendChild(b);
+ }
+ const d=state.selected,ss=getSessions(d),done=state.done.includes(d);
+ let html='<div class="row"><div><span class="tag">'+
+  (ss.length?"NGÀY TẬP":"NGÀY NGHỈ")+'</span><h2>Ngày '+d+
+  '</h2><div class="muted">'+dateOf(d)+'</div></div><span class="tag">'+d+'/57</span></div>';
+ html+='<div class="check"><input type="checkbox" id="mark" '+(done?"checked":"")+
+  '><label for="mark">'+(done?"Đã hoàn thành ngày này":"Đánh dấu ngày đã hoàn thành")+'</label></div>';
+ if(ss.length){
+  html+='<p class="muted">VIDEO CẦN TẬP</p>';
+  ss.forEach(n=>{html+=videoLink(videos[n-1],"Buổi "+n,"Mở video trên YouTube")});
+ }else{
+  html+='<p class="muted">Ngày nghỉ: hãy nghỉ ngơi hoặc tự chọn một trong hai video dưới đây. Không bắt buộc tập cả hai.</p>';
+  html+='<a class="video" href="https://youtu.be/HjOn927LayE" target="_blank" rel="noopener"><span class="play">▶</span><span><b>Lựa chọn 1 · Đu xà</b><small>Mở video hướng dẫn đu xà</small></span></a>';
+  html+='<a class="video" href="https://youtu.be/RKIfXm62zcs?si=b0-FzeKWJQW-Qc1R" target="_blank" rel="noopener"><span class="play">▶</span><span><b>Lựa chọn 2 · Bài thay thế / giãn cơ</b><small>Dùng khi không chọn đu xà</small></span></a>';
+ }
+ html+='<p class="note">Hãy tích ô hoàn thành sau khi tập xong.</p>';
+ $("detail").innerHTML=html;
+ $("mark").onchange=e=>{
+  state.done=e.target.checked?
+   [...new Set([...state.done,d])]:state.done.filter(x=>x!==d);
+  save();render();
+ };
+ const n=state.done.length,p=Math.round(n/57*100);
+ $("count").textContent=n;
+ $("percent").textContent=p+"%";
+ $("fill").style.width=p+"%";
+ $("progressText").textContent=n===57?"Đã hoàn thành cả 57 ngày!":
+  n===0?"Bắt đầu từ ngày đầu tiên.":"Còn "+(57-n)+" ngày chưa hoàn thành.";
+}
+$("start").onchange=()=>{
+ if($("start").value){state.start=$("start").value;save();render()}
+};
+$("today").onclick=()=>{
+ const a=new Date(state.start+"T12:00:00"),b=new Date(isoToday+"T12:00:00");
+ state.selected=Math.max(1,Math.min(57,Math.floor((b-a)/86400000)+1));
+ save();render();
+};
+$("reset").onclick=()=>{
+ if(confirm("Bạn có chắc muốn xóa tất cả ngày đã đánh dấu hoàn thành?")){
+  state.done=[];save();render();
+ }
+};
+render();
+</script>
+</body>
+</html>
